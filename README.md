@@ -3,6 +3,7 @@
 Epochalypse is an enhanced Y2K38/epoch rollover vulnerability scanner that inventories your network and highlights hosts that are still likely to be running 32‑bit time implementations. It combines targeted TCP/UDP probing, SNMP and SMB interrogation, banner analysis, heuristics about operating system age, and optional LLM-based reasoning to prioritize which systems need remediation before January 2038.
 
 ## Features
+
 - Multi-protocol fingerprinting across curated TCP (`21,22,23,25,80,110,143,443,445,3306,3389,5432,8080,8443`) and UDP (`53,123,161,500,514,1900`) ports
 - SNMPv2c inventory gathering (`sysDescr`, `sysUpTime`, etc.) and SMB OS metadata extraction to improve attribution
 - Embedded device/legacy OS heuristics, risk scoring (0‑100), and vulnerability level classification
@@ -10,6 +11,7 @@ Epochalypse is an enhanced Y2K38/epoch rollover vulnerability scanner that inven
 - Optional LLM (OpenAI-compatible) assessment for high-risk hosts to provide mitigation context
 
 ## Requirements
+
 - Python 3.10+ (uses modern typing features such as `list[int]`)
 - Network reachability to the target CIDR range and permissions for the probes you enable
 - Dependencies (install via `pip install pysnmp impacket requests`)
@@ -18,10 +20,11 @@ Epochalypse is an enhanced Y2K38/epoch rollover vulnerability scanner that inven
   - `requests` for the LLM integration
 
 ## Quick Start
+
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install pysnmp impacket requests
+pip install -r requirements.txt
 python epochalypse_scanner.py 192.168.1.0/24 --snmp-community public --format text
 ```
 
@@ -38,18 +41,21 @@ The script prints progress updates to stderr and the selected report format to s
 | `--disable-smb` | Skip SMB OS fingerprinting (enabled by default). |
 | `--format` | `text`, `json`, or `csv` (default `text`). |
 | `--output` | Path to save the report; otherwise the report prints to stdout. |
-| `--llm-api-key` / `--llm-model` | Adds LLM-based reasoning for any host rated potentially vulnerable or worse. Requires an OpenAI-compatible API endpoint. |
+| `--llm-api-key` | Optional LLM-based reasoning for any host rated potentially vulnerable or worse. OpenAI key |
+| `--llm-model` | LLM model to use: eg: `gpt4-mini` |
 
 See `python epochalypse_scanner.py --help` for the full option list and in-script documentation.
 
 ## Output Overview
+
 - **Text:** Human-friendly report sorted by risk score, showing discovered services, SNMP/SMB details, heuristics, and remediation pointers.
 - **JSON:** Structured array of host fingerprints (matches `HostFingerprint.to_dict`) suitable for ingestion into SIEM/CMDB workflows.
 - **CSV:** Tabular summary with key risk fields for spreadsheet review.
 
 ## LLM Integration
+
 Provide `--llm-api-key` (and optionally `--llm-model`) to have high-risk hosts summarized by an LLM regarding probability, confidence, risk factors, and recommendations. The scanner only shares truncated banners/metadata and never raw packet data. Disable this option if outbound API calls are not permitted in your environment.
 
 ## Responsible Use
-Only scan networks that you own or have explicit permission to assess. Some probes (especially SNMP/SMB) may trigger alerts on monitored systems; coordinate with your operations or security team before running large sweeps.
 
+Only scan networks that you own or have explicit permission to assess. Some probes (especially SNMP/SMB) may trigger alerts on monitored systems; coordinate with your operations or security team before running large sweeps.

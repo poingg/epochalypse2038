@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pylint: disable=W0718, C0301, C0302, C0415, W0702
+# pylint: disable=W0718, C0301, C0302, C0415, W0702, W0511
 """
 Epochalypse Network Scanner - Enhanced Y2K38 Vulnerability Scanner
 Combines TCP/UDP scanning, SNMP probing, and optional LLM-based risk assessment
@@ -1255,3 +1255,20 @@ About Y2K38:
 
 if __name__ == "__main__":
     main()
+
+
+#TODO: guess_architecture currently looks only for high-level substrings. Expand that list to cover strings you’ll often see in SNMP sysDescr, SMB NativeOS, SSH banners, and HTTP headers: e.g. ELF 32-bit, ARMv5tel, PowerPC 740/750, MIPS32, uClibc, uclinux, BSD/OS 4.3, SunOS 5.8, or Windows NT 5.. At the same time, add explicit 64‑bit hits(e.g. WOW64, x64 inside SMB NativeOS) so that the absence of those words is more meaningful when you compute the score at epochalypse_scanner.py(lines 567-580).
+
+# TODO: Pull in more SNMP data when it’s available. Right now probe_snmp_full only requests the basic sys * OIDs, yet HOST-RESOURCES-MIB contains hrDeviceDescr and hrStorageSize entries that often show the processor type and amount of RAM. Querying 1.3.6.1.2.1.25.3.2.1.3 and 1.3.6.1.2.1.25.2.3.1.5 lets you flag systems with ≤4 GB RAM or with CPU strings like “Intel 486”. Feeding those targeted values into guess_architecture/calculate_risk_score would be much stronger evidence than free-text banners.
+
+#TODO: We already parse SSH banners in estimate_service_age. Extend the same idea to other ubiquitous services: SMTP (Postfix 2.3, Exchange 6.5), FTP (ProFTPD 1.3.2), SMB (Samba 3.0 vs Samba 4.x), web servers (Server header for Apache/IIS/Zeus), and TLS handshakes (OpenSSL version strings in certificates). Building a simple mapping {version → first release year} for those services makes the approx_age_year value (and thus the scoring at epochalypse_scanner.py (lines 581-599)) far more reliable.
+
+# TODO: Augment calculate_risk_score with SMB-specific rules. The SMBConnection call already gives you strings like Windows 5.2 or Samba 3.6 treat any Windows 5.x(2000/XP/2003) or Samba < 4 as +20 points and force the architecture to likely_32bit unless you see “x64 Edition”. Similarly, treat missing SMB signing or NT LM 0.12 dialects as legacy hints if you extend the probe to capture those flags.
+
+#TODO: For SNMP devices, map sysObjectID prefixes to known embedded hardware(Cisco 2600, WRT54G, etc.) and set embedded_device explicitly instead of relying solely on text keywords. That would make the + 15 adjustment at epochalypse_scanner.py(lines 609-615) fire in more cases where vendors hide marketing names inside OIDs rather than banners.
+
+# TODO: Use protocol behavior. NTP mode 3 replies that report version <= 3 or REFIDs like “LOCL” are usually from firmware that predates 2008 treat that as both old age and “time-critical service” evidence beyond the current + 10 at epochalypse_scanner.py(lines 616-622). Likewise, check whether HTTPS endpoints still negotiate SSLv2/SSLv3/TLS1.0 only if so, bump the risk because those stacks were typically compiled for 32‑bit targets.
+
+# TODO: Consider heuristics based on resource limits: SNMP hrSystemNumUsers + hrStorageSize + Constructor values that imply < 4 GB RAM, or SMB MaxBufferSize < 65535. Anything that cannot address >4 GB is almost certainly a 32‑bit build, and feeding that evidence into fingerprint.architecture before the scoring pass would materially improve discrimination.
+
+# TODO: consider splitting the scanner into multiple files/modules for better organization as it grows. For example, separate scanning functions, analysis functions, and reporting functions could each reside in their own module.
