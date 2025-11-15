@@ -55,4 +55,6 @@ class HostFingerprint:
         """Convert to dictionary for JSON serialization"""
         data = asdict(self)
         data['vulnerability_level'] = self.vulnerability_level.value
+        # Convert set to list for JSON serialization
+        data['discovered_ports'] = list(data['discovered_ports'])
         return data
