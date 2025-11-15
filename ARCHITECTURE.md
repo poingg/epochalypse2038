@@ -11,8 +11,7 @@ epochalypse2038/
 ├── risk_scoring.py            # Risk analysis and scoring
 ├── llm_integration.py         # LLM-based assessment
 ├── reporting.py               # Report generation (text/JSON/CSV)
-├── requirements.txt           # Python dependencies
-└── epochalypse_scanner_old.py # Original monolithic version (backup)
+└── requirements.txt           # Python dependencies
 ```
 
 ## Module Overview
